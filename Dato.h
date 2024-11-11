@@ -18,14 +18,13 @@ public:
     int obtenerId() const;
     void establecerId(int nuevoId);
 
-     // Compara dos personas por edad y luego por nombre si las edades son iguales.
+    // Compara dos personas por edad y luego por nombre si las edades son iguales.
     bool operator<(const Dato &other) const;
 
     bool operator>(const Dato &other) const;
 
     // Comprueba si dos personas son iguales en términos de edad y nombre.
     bool operator==(const Dato &other) const;
-
 };
 
 #endif 

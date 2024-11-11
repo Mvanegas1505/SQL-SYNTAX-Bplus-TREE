@@ -8,14 +8,12 @@ class BpNode{
 
 public:
  
- bool isLeaf;
- std::vector<Dato*> key;
- std::vector<BpNode*> child_ptrs;
-  BpNode* next;
+    bool isLeaf;
+    std::vector<Dato*> key;
+    std::vector<BpNode*> child_ptrs;
+    BpNode* next;
 
-
- BpNode(bool isNodeleaf) : isLeaf(isNodeleaf), next(nullptr){}
-
+    BpNode(bool isNodeleaf) : isLeaf(isNodeleaf), next(nullptr){}
 };
 
 
