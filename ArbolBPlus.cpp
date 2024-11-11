@@ -71,45 +71,55 @@ void ArbolBPlus::seleccionar(const std::string& tabla, const std::vector<std::st
     }
     std::cout << " FROM " << tabla << std::endl;
 
-     if (!root) {
+    if (!root) {
         std::cout << "Tabla vacía" << std::endl;
         return;
     }
 
-    // Imprimir encabezados
-    for (const auto& columna : columnas) {
-        std::cout << std::setw(15) << std::left << columna;
-    }
-    std::cout << std::endl;
-    std::cout << std::string(15 * columnas.size(), '-') << std::endl;
-
-    // Encontrar el nodo más a la izquierda (primer nodo hoja)
-    BpNode* actual = root;
-    while (!actual->isLeaf) {
-        actual = actual->child_ptrs[0];
-    }
-
-    // Procesar todos los nodos hoja encontrados
-    while (actual != nullptr && actual->isLeaf) {
-        for (size_t i = 0; i < actual->key.size(); i++) {
-            // Mostrar datos según las columnas solicitadas
-            for (const auto& columna : columnas) {
-                if (columna == "id") {
-                    std::cout << std::setw(15) << std::left << actual->key[i];
-                }
-                if (columna == "nombre" && actual->key.size() > i) {
-                    std::cout << std::setw(15) << std::left << actual->key[i]->obtenerNombre();
-                }
-                // Añadir más columnas según sea necesario
+    // Mostrar datos de la raíz
+    BpNode* nodo_actual = root;
+    for (auto& dato : nodo_actual->key) {
+        for (const auto& columna : columnas) {
+            if (columna == "nombre") {
+                std::cout << dato->obtenerNombre() << "\t";
+            } else if (columna == "id") {
+                std::cout << dato->obtenerId() << "\t";
             }
-            std::cout << std::endl;
         }
-        
-        actual = actual->next;
-        // Si tuviéramos un enlace al siguiente nodo hoja, lo usaríamos aquí
-        break; // Por ahora terminamos después del primer nodo hoja
+        std::cout << std::endl;
     }
 
+    // Recorrer todas las ramas del árbol usando un stack
+    std::vector<BpNode*> nodos; // Stack de nodos
+    nodos.push_back(root);
+
+    while (!nodos.empty()) {
+        nodo_actual = nodos.back();
+        nodos.pop_back();
+
+        if (!nodo_actual->isLeaf) {
+            for (auto it = nodo_actual->child_ptrs.rbegin(); it != nodo_actual->child_ptrs.rend(); ++it) {
+                if (*it) {
+                    nodos.push_back(*it);
+                }
+            }
+        } else {
+            // Iterar sobre todas las hojas
+            while (nodo_actual) {
+                for (auto& dato : nodo_actual->key) {
+                    for (const auto& columna : columnas) {
+                        if (columna == "nombre") {
+                            std::cout << dato->obtenerNombre() << "\t";
+                        } else if (columna == "id") {
+                            std::cout << dato->obtenerId() << "\t";
+                        }
+                    }
+                    std::cout << std::endl;
+                }
+                nodo_actual = nodo_actual->nextLeaf;
+            }
+        }
+    }
 }
 
 // Implementación del método actualizar
