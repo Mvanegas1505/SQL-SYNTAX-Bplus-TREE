@@ -21,30 +21,44 @@ void ArbolBPlus::insertar(const std::string& tabla, std::vector<std::string> col
     }
     std::cout << ")\n";
 
-    // Verificar que el número de columnas y valores coincida
+    // Verificar que las columnas y valores coincidan
     if (columnas.size() != valores.size()) {
-        std::cerr << "Error: El número de columnas y valores no coincide." << std::endl;
+        std::cerr << "Error: El número de columnas y valores no coincide.\n";
         return;
     }
 
-    // Crear un nuevo Dato con los valores proporcionados
-    Dato* dato = new Dato(valores[0], std::stoi(valores[1]));
+    // Crear un nuevo Dato a partir de las columnas y valores
+    std::string nombre;
+    int id = 0;
+    for (size_t i = 0; i < columnas.size(); ++i) {
+        if (columnas[i] == "nombre") {
+            nombre = valores[i];
+        } else if (columnas[i] == "id") {
+            try {
+                id = std::stoi(valores[i]);
+            } catch (const std::invalid_argument&) {
+                std::cerr << "Error: El valor de id no es un número válido.\n";
+                return;
+            }
+        }
+    }
 
+    Dato* nuevoDato = new Dato(nombre, id);
     if (!root) {
         root = new BpNode(true);
-        root->key.push_back(dato);
-    } else {
-        if (root->key.size() == (size_t)maxKeys) {
-            BpNode* newRoot = new BpNode(false);
-            newRoot->child_ptrs.push_back(root);
-            BpNode* hijo = splitchild(newRoot, 0);
-            newRoot->child_ptrs.push_back(hijo);
-            root = newRoot;
-        }
-        insertNonFull(root, dato);
+        root->isLeaf = true;
     }
-}
 
+    if (root->key.size() == static_cast<size_t>(maxKeys)) {
+        BpNode* nuevoRoot = new BpNode(false);
+        nuevoRoot->isLeaf = false;
+        nuevoRoot->child_ptrs.push_back(root);
+        splitChild(nuevoRoot, 0);
+        root = nuevoRoot;
+    }
+
+    insertNonFull(root, nuevoDato);
+}
 
 // Implementación del método seleccionar
 // Muestra en la consola el comando simulado de selección con columnas especificadas
@@ -98,69 +112,79 @@ void ArbolBPlus::seleccionar(const std::string& tabla, const std::vector<std::st
 
 }
 
-
 // Implementación del método actualizar
 // Muestra en la consola el comando simulado de actualización con asignaciones y condición
-void ArbolBPlus::actualizar(const std::string& tabla, const std::map<std::string, std::string>& asignaciones, const std::string& condicion) {
+void ArbolBPlus::actualizar(const std::string& tabla, const std::map<std::string, std::string>& asignaciones, const std::map<std::string, std::string>& condicion) {
     std::cout << "Ejecutando: UPDATE " << tabla << " SET ";
-    size_t i = 0;
-    // Itera y muestra cada asignación en el formato columna=valor
     for (const auto& asignacion : asignaciones) {
         std::cout << asignacion.first << " = " << asignacion.second;
-        if (i < asignaciones.size() - 1) std::cout << ", ";
-        ++i;
     }
-    std::cout << " WHERE " << condicion << std::endl;
-
-    
-    auto it = asignaciones.begin();
-
-    std::string keyUpper = it->first;
-    std::transform(keyUpper.begin(), keyUpper.end(), keyUpper.begin(), ::toupper);
-    if (it != asignaciones.end() && keyUpper == "ID"){
-         Dato* aux = new Dato(condicion, std::stoi(it->second));
-         BpNode* nodoObjetivo = buscarNodo(root, aux);
-         if (nodoObjetivo != nullptr){
-             
-             nodoObjetivo->key[0]->establecerId(std::stoi(it->second));
-               
-             std::cout << "Actualizacion realizada en clave" << nodoObjetivo->key[0]->obtenerNombre() << ".\n";
-
-         }else {
-         std::cout << "No se encontro el registro.\n";
-         }
-         
+    std::cout << " WHERE ";
+    for (const auto& con : condicion) {
+        std::cout << con.first << " = " << con.second << std::endl; 
     }
 
-    /*int claveObjetivo = extraerClaveDesdeCondicion(condicion);
+    std::string keyAsignacion = asignaciones.begin()->first;
+    std::string valueAsignacion = asignaciones.begin()->second;
 
-    BpNode* nodoObjetivo = buscarNodo(root, claveObjetivo);
+    std::string keyCondicion = condicion.begin()->first;
+    std::string valueCondicion = condicion.begin()->second;
 
-    if(nodoObjetivo) {
-        for(size_t j = 0; j < nodoObjetivo->key.size(); j++){
-            if(nodoObjetivo->key[j]->obtenerId() == claveObjetivo){
-                Dato* dato = nodoObjetivo->key[j];
+    std::transform(keyCondicion.begin(), keyCondicion.end(), keyCondicion.begin(), ::toupper);
+    std::transform(keyAsignacion.begin(), keyAsignacion.end(), keyAsignacion.begin(), ::toupper);
 
-                for(const auto& asignacion : asignaciones){
-                    if(asignacion.first == "nombre"){
-                        dato->establecerNombre(asignacion.second);
-                    } else if(asignacion.first == "identificacion"){
-                        dato->establecerId(std::stoi(asignacion.second));
+    if (keyCondicion == "NOMBRE"){
+        
+        std::vector<BpNode*> nodosObjetivo = buscarNodo(root, valueCondicion);
+            
+        if (!nodosObjetivo.empty()){
+            for (size_t i = 0; i < nodosObjetivo.size(); i++){
+                for (size_t j = 0; j < nodosObjetivo[i]->key.size(); j++) {
+
+                    Dato* dato = nodosObjetivo[i]->key[j];
+                    std::string datoNombre = dato->obtenerNombre(); 
+                    
+                    std::transform(datoNombre.begin(), datoNombre.end(), datoNombre.begin(), ::toupper);
+                    std::transform(valueCondicion.begin(), valueCondicion.end(), valueCondicion.begin(), ::toupper);
+
+                    if (datoNombre == valueCondicion){
+                        if (keyAsignacion == "NOMBRE"){
+                            dato->establecerNombre(valueAsignacion);
+                        } else {
+                            dato->establecerId(std::stoi(valueAsignacion));
+                        }
                     }
                 }
-                std::cout << "Actualizacion realizada en clave" << claveObjetivo << ".\n";
-                return;
             }
+            std::cout << "Actualizacion realizada exitosamente.\n";
+        } else {
+            std::cout << "No se encontro el registro.\n";
         }
+         
     } else {
-        std::cout << "Clave " << claveObjetivo << " no encontrada para actualizacion.\n";
+
+        BpNode* nodoObjetivo = buscarNodo(root, std::stoi(valueCondicion));
+
+        if (nodoObjetivo != nullptr){
+            for (size_t i = 0; i < nodoObjetivo->key.size(); i++) {
+                Dato* dato = nodoObjetivo->key[i];
+
+                if (dato->obtenerId() == std::stoi(valueCondicion)){
+                    if (keyAsignacion == "NOMBRE"){
+                        dato->establecerNombre(valueAsignacion);
+                    } else {
+                        dato->establecerId(std::stoi(valueAsignacion));
+                    }
+                }
+            }
+            std::cout << "Actualizacion realizada exitosamente.\n";
+        } else {
+            std::cout << "No se encontro el registro.\n";
+        }
     }
 
-    */
 }
 
-// Implementación del método eliminar
-// Muestra en la consola el comando simulado de eliminación con la condición dada
 // Implementación del método eliminar
 // Muestra en la consola el comando simulado de eliminación con la condición dada
 void ArbolBPlus::eliminar(const std::string& tabla, const std::string& condicion) {
@@ -290,28 +314,27 @@ BpNode* ArbolBPlus::encontrarPadre(BpNode* nodoActual, BpNode* nodoHijo) {
     return nullptr;
 }
 
-
-
-
 void ArbolBPlus::insertNonFull(BpNode* nodo, Dato* llave) {
     if (nodo->isLeaf) {
         nodo->key.push_back(llave);
-        std::sort(nodo->key.begin(), nodo->key.end());
+        std::sort(nodo->key.begin(), nodo->key.end(), [](const Dato* a, const Dato* b) {
+            return a->obtenerId() < b->obtenerId();
+        });
+        std::cout << "Inserted " << llave->obtenerId() << " into leaf node.\n";
     } else {
         size_t i = 0;
         while (i < nodo->key.size() && llave->obtenerId() > nodo->key[i]->obtenerId()) {
             i++;
         }
         if (nodo->child_ptrs[i]->key.size() == static_cast<size_t>(maxKeys)) {
-            BpNode* hijo = splitchild(nodo, i);
-            nodo->child_ptrs.insert(nodo->child_ptrs.begin() + i + 1, hijo);
-            if (llave > nodo->key[i]) i++;
-        }
-                insertNonFull(nodo->child_ptrs[i], llave);
+            splitChild(nodo, i);
+            if (llave->obtenerId() > nodo->key[i]->obtenerId()) {
+                i++;
             }
         }
-    
-
+        insertNonFull(nodo->child_ptrs[i], llave);
+    }
+}
 
 BpNode* ArbolBPlus::splitchild(BpNode* nodo, int indice) {
 
@@ -331,32 +354,55 @@ BpNode* ArbolBPlus::splitchild(BpNode* nodo, int indice) {
     return nuevoNodo;
 }
 
-int ArbolBPlus::extraerClaveDesdeCondicion(const std::string& condicion){
-    size_t pos = condicion.find("=");
-    if(pos != std::string::npos){
-        return std::stoi(condicion.substr(pos + 1));
-    }
-    return -1;
+std::vector<BpNode*> matches;
+std::vector<BpNode*> ArbolBPlus::buscarNodo(BpNode* nodo, std::string& nombre){
+    buscarMatches(nodo, nombre);
+    std::vector<BpNode*> aux = matches;
+    matches.clear();
+
+    return aux;
 }
 
-BpNode* ArbolBPlus::buscarNodo(BpNode* nodo, Dato* clave){
-    if(!nodo) return nullptr;
+void ArbolBPlus::buscarMatches(BpNode* nodo, std::string& nombre){
+    if (!nodo) return;
+
+    for (size_t i = 0; i < nodo->key.size(); i++) {
+        Dato* dato = nodo->key[i];
+        std::string nombreDato = dato->obtenerNombre();
+
+        std::transform(nombreDato.begin(), nombreDato.end(), nombreDato.begin(), ::toupper);
+        std::transform(nombre.begin(), nombre.end(), nombre.begin(), ::toupper);
+
+        if (nombreDato == nombre) {
+            int count = std::count(matches.begin(), matches.end(), nodo);
+            if (count <= 0){
+                matches.emplace_back(nodo);
+            }
+        } 
+    }
+    
+    for (size_t i = 0; i < nodo->child_ptrs.size(); i++) {
+        buscarMatches(nodo->child_ptrs[i], nombre);    
+    }
+}
+
+BpNode* ArbolBPlus::buscarNodo(BpNode* nodo, int id){
+    if (!nodo) return nullptr;
 
     size_t i = 0;
-    while (i < nodo->key.size() && clave->obtenerId() > nodo->key[i]->obtenerId()){
-        i++;
-    }
-    if(i < nodo->key.size() && nodo->key[i]->obtenerId() == clave->obtenerId()){
+    while (i < nodo->key.size() && id > nodo->key[i]->obtenerId()) i++;
+    
+    if (i < nodo->key.size() && id == nodo->key[i]->obtenerId()) {
         return nodo;
     }
 
-    if(nodo->isLeaf){
+    if (nodo->isLeaf) {
         return nullptr;
     } else {
-        return buscarNodo(nodo->child_ptrs[i], clave);
+        BpNode* resultado = buscarNodo(nodo->child_ptrs[i], id);
+        return resultado;
     }
 }
-
 
 void ArbolBPlus::mostrarArbol() {
     printTreeAux(root, "", true);
@@ -380,4 +426,27 @@ void ArbolBPlus::printTreeAux(BpNode* nodo, std::string prefix, bool esUltimo) {
     for (size_t i = 0; i < nodo->child_ptrs.size(); i++) {
         printTreeAux(nodo->child_ptrs[i], prefix, i == nodo->child_ptrs.size() - 1);
     }
+}
+
+void ArbolBPlus::splitChild(BpNode* padre, size_t i) {
+    BpNode* hijo = padre->child_ptrs[i];
+    BpNode* nuevoHijo = new BpNode(hijo->isLeaf);
+    nuevoHijo->isLeaf = hijo->isLeaf;
+
+    size_t t = maxKeys / 2;
+    for (size_t j = 0; j < t; ++j) {
+        nuevoHijo->key.push_back(hijo->key[j + t + 1]);
+    }
+
+    if (!hijo->isLeaf) {
+        for (size_t j = 0; j <= t; ++j) {
+            nuevoHijo->child_ptrs.push_back(hijo->child_ptrs[j + t + 1]);
+        }
+    }
+
+    hijo->key.resize(t);
+    hijo->child_ptrs.resize(t + 1);
+
+    padre->child_ptrs.insert(padre->child_ptrs.begin() + i + 1, nuevoHijo);
+    padre->key.insert(padre->key.begin() + i, hijo->key[t]);
 }

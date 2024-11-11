@@ -27,7 +27,7 @@ public:
 
     // Método para simular la actualización de datos en el árbol B+
     // Recibe el nombre de la tabla, un mapa de asignaciones (columna=valor), y una condición
-    void actualizar(const std::string& tabla, const std::map<std::string, std::string>& asignaciones, const std::string& condicion);
+    void actualizar(const std::string& tabla, const std::map<std::string, std::string>& asignaciones, const std::map<std::string, std::string>& condicion);
 
     // Método para simular la eliminación de datos en el árbol B+
     // Recibe el nombre de la tabla y una condición para eliminar filas que la cumplan
@@ -38,23 +38,20 @@ public:
     void rebalancearDespuesDeEliminar(BpNode* nodo);
 
     void redistribuirIzq(BpNode* padre, size_t idx);
-
+     
     void redistribuirDer(BpNode* padre, size_t idx);
 
     void fusionarNodos(BpNode* padre, size_t idx);
 
     BpNode* encontrarPadre(BpNode* nodoActual, BpNode* nodoHijo);
 
-    void eliminarClavePorNombre(BpNode* nodo, Dato* clave, const std::string& nombre);
+    void splitChild(BpNode* padre, size_t i);
 
-     void mostrarArbol();
-
-    
-
+    void mostrarArbol();
 
     private:
 
-     // Inserta una llave en un nodo que no está lleno
+    // Inserta una llave en un nodo que no está lleno
     void insertNonFull(BpNode* node, Dato* llave);
 
     // Divide un nodo cuando está lleno
@@ -65,10 +62,12 @@ public:
 
     // Función auxiliar para mostrar el árbol desde un nodo específico
     void printTreeAux(BpNode* node, std::string prefix, bool isLast);
-
-    int extraerClaveDesdeCondicion(const std::string& condicion);
     
-    BpNode* buscarNodo(BpNode* nodo, Dato* clave);
+    std::vector<BpNode*> buscarNodo(BpNode* nodo, std::string& nombre);
+
+    void buscarMatches(BpNode* nodo, std::string& nombre);
+
+    BpNode* buscarNodo(BpNode* nodo, int id);
 };
 
-#endif 
+#endif

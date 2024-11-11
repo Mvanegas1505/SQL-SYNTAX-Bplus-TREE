@@ -46,11 +46,14 @@ void AnalizadorSQL::analizarSeleccionar(std::istringstream& flujo) {
 // Función para analizar un comando UPDATE
 // Descompone la parte de asignaciones y condición, y llama al árbol B+ para actualizar
 void AnalizadorSQL::analizarActualizar(std::istringstream& flujo) {
-    std::string tabla, establecer, parteAsignaciones, donde, condicion;
-    flujo >> tabla >> establecer >> parteAsignaciones >> donde >> condicion;
+    std::string tabla, establecer, parteAsignaciones, donde, partesCondicion;
+    flujo >> tabla >> establecer >> parteAsignaciones >> donde >> partesCondicion;
 
     std::map<std::string, std::string> asignaciones = procesarAsignaciones(parteAsignaciones);
+    std::map<std::string, std::string> condicion = procesarAsignaciones(partesCondicion);
+    
     arbol.actualizar(tabla, asignaciones, condicion);  // Ejecuta el comando en el árbol B+
+    arbol.mostrarArbol();
 }
 
 // Función para analizar un comando DELETE
