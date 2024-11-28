@@ -12,8 +12,10 @@ El proyecto se divide en los siguientes archivos:
 
 - `ArbolBPlus.h` y `ArbolBPlus.cpp`: Definen y implementan la clase `ArbolBPlus`, que simula un árbol B+ con operaciones
   básicas de inserción, selección, actualización y eliminación.
+- `BpNode.h` y `BpNode.cpp`: Definen la clase nodo para el Arbol Bplus
 - `AnalizadorSQL.h` y `AnalizadorSQL.cpp`: Contienen la clase `AnalizadorSQL`, que interpreta los comandos SQL y llama
   a los métodos de `ArbolBPlus`.
+- `Dato.h` y `Dato.cpp`: Definen el objeto tipo dato que guarda variables como nombre y edad.
 - `main.cpp`: Archivo principal que inicia el programa y permite al usuario ingresar comandos SQL.
 - `Makefile`: Archivo para automatizar la compilación y ejecución del proyecto.
 
